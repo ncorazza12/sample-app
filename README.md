@@ -1,253 +1,174 @@
-# 🐳 Lab Docker — PHP + MySQL com Apache
+# sample-app
 
-![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
-![PHP](https://img.shields.io/badge/PHP-8.2-777BB4?style=for-the-badge&logo=php&logoColor=white)
-![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
-![Apache](https://img.shields.io/badge/Apache-2.4-D22128?style=for-the-badge&logo=apache&logoColor=white)
-![Windows](https://img.shields.io/badge/Windows_11-0078D6?style=for-the-badge&logo=windows&logoColor=white)
+Aplicação de exemplo utilizada na atividade **CP2 - Pipeline CI/CD com Jenkins**.
 
-> Laboratório prático demonstrando a containerização de uma aplicação **PHP + MySQL** com **Apache**, utilizando **Docker Desktop** no Windows 11 com WSL.
+> Disciplina: Desenvolvimento de Aplicações e Automação de Redes  
+> Grupo NEXT | Entrega: 17/05/2026
 
 ---
 
-## 📋 Índice
+## 📋 Sobre o Projeto
 
-- [Sobre o Projeto](#-sobre-o-projeto)
-- [Pré-requisitos](#-pré-requisitos)
-- [Estrutura de Diretórios](#-estrutura-de-diretórios)
-- [Configuração do Ambiente](#-configuração-do-ambiente)
-  - [1. Criação do Volume MySQL](#1-criação-do-volume-mysql)
-  - [2. Execução do Container MySQL](#2-execução-do-container-mysql)
-  - [3. Build da Imagem PHP](#3-build-da-imagem-php)
-  - [4. Execução do Container PHP](#4-execução-do-container-php)
-- [Acesso à Aplicação](#-acesso-à-aplicação)
-- [Encerramento](#-encerramento)
-- [Tecnologias Utilizadas](#-tecnologias-utilizadas)
-- [Autor](#-autor)
+Esta aplicação Flask simples foi utilizada para demonstrar na prática a construção de um pipeline de **Integração Contínua e Entrega Contínua (CI/CD)** utilizando Jenkins, Docker e GitHub.
+
+O pipeline automatiza o ciclo completo: a cada commit no repositório, o Jenkins clona o código, constrói um contêiner Docker com a aplicação, executa testes automatizados e valida que a aplicação está funcionando corretamente.
 
 ---
 
-## 📌 Sobre o Projeto
+## 🗂️ Estrutura do Repositório
 
-Este laboratório tem como objetivo demonstrar na prática os conceitos de:
-
-- **Containerização** de aplicações com Docker
-- **Comunicação entre containers** via `--link`
-- **Persistência de dados** com Docker Volumes
-- **Deploy de aplicação PHP** com servidor Apache
-- **Integração PHP + MySQL** dentro de containers isolados
-
-A aplicação exibe uma lista de mensagens armazenadas no banco de dados MySQL, servida por um container PHP/Apache.
+```
+sample-app/
+├── sample_app.py          # Aplicação Flask principal
+├── sample-app.sh          # Script de build (cria e sobe o contêiner Docker)
+├── templates/
+│   └── index.html         # Página HTML da aplicação
+├── static/
+│   └── style.css          # Estilo da página
+├── images/                # Prints de evidência da atividade
+└── README.md
+```
 
 ---
 
-## ✅ Pré-requisitos
+## ⚙️ Ambiente Utilizado
 
-Antes de iniciar, certifique-se de ter instalado:
+| Ferramenta | Uso |
+|---|---|
+| Windows 11 + WSL2 (Ubuntu) | Ambiente de desenvolvimento (substitui a VM DEVASC) |
+| Docker Desktop for Windows | Execução dos contêineres (Jenkins + aplicação) |
+| Jenkins (via Docker) | Servidor de CI/CD |
+| GitHub | Repositório remoto de código |
+| Python + Flask | Linguagem e framework da aplicação |
 
-| Ferramenta | Versão Recomendada | Link |
+---
+
+## 🚀 Como Executar a Aplicação Localmente
+
+### Pré-requisitos
+- WSL2 com Ubuntu instalado
+- Docker Desktop em execução
+
+### Passos
+
+```bash
+# 1. Clone o repositório
+git clone https://github.com/SEU-USUARIO/sample-app.git
+cd sample-app
+
+# 2. Execute o script de build
+bash ./sample-app.sh
+
+# 3. Acesse no navegador
+# http://localhost:5050
+```
+
+---
+
+## 📸 Evidências da Atividade
+
+### 1. Repositório no GitHub
+![Repositório no GitHub](images/print_repositorio_git.jpeg)
+
+---
+
+### 2. Aplicação rodando na porta 5050
+![Aplicação rodando na porta 5050](images/print_app_rodando.jpeg)
+
+---
+
+### 3. Jenkins confirmando app rodando
+![Jenkins app rodando](images/jenkins_app_rodando.jpeg)
+
+---
+
+### 4. Console Output — BuildAppJob
+![Console Output BuildAppJob](images/print_console_output_buildappjob.jpeg)
+
+---
+
+### 5. Console Output — TestAppJob
+![Console Output TestAppJob](images/print_console_output_buildtesteappjob.jpeg)
+
+---
+
+### 6. Pipeline — 3 estágios verdes
+![Pipeline 3 estágios verdes](images/print_3estagios_pipeline.jpeg)
+
+---
+
+## 🔧 Pipeline CI/CD no Jenkins
+
+O pipeline é composto por 3 estágios:
+
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│   Preparation   │────▶│      Build      │────▶│     Results     │
+│                 │     │                 │     │                 │
+│ Para e remove   │     │ Clona o repo    │     │ Testa se a app  │
+│ contêiner       │     │ e faz o build   │     │ responde na     │
+│ anterior        │     │ Docker          │     │ porta 5050      │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+```
+
+### Jobs configurados no Jenkins
+
+| Job | Tipo | Função |
 |---|---|---|
-| Windows 11 | — | — |
-| WSL 2 | — | [Instalação WSL](https://learn.microsoft.com/pt-br/windows/wsl/install) |
-| Docker Desktop | Latest | [Download Docker](https://www.docker.com/products/docker-desktop/) |
+| `BuildAppJob` | Freestyle | Clona o repo e executa `bash ./sample-app.sh` |
+| `TestAppJob` | Freestyle | Valida a aplicação via cURL após o build |
+| `SamplePipeline` | Pipeline | Orquestra os dois jobs acima em sequência |
 
----
+### Script do Pipeline (Groovy)
 
-## 📁 Estrutura de Diretórios
-
-```
-C:\lab-php-mysql
-│
-├── Dockerfile
-├── index.php
-├── README.md
-└── prints
-    ├── container-executando.png
-    ├── container-rodando.jpeg
-    ├── container-navegando.jpeg
-    └── docker-volume-mysql.png
-```
-
----
-
-## ⚙️ Configuração do Ambiente
-
-### 1. Criação do Volume MySQL
-
-Crie um volume Docker para persistência dos dados do banco:
-
-```powershell
-docker volume create mysql_data
-```
-
-Verifique se o volume foi criado:
-
-```powershell
-docker volume ls
-```
-
-> **Resultado esperado:**
->
-> ![Docker Volume](prints/docker-volume-mysql.png)
-
----
-
-### 2. Execução do Container MySQL
-
-Suba o container MySQL com as credenciais e o volume criado:
-
-```powershell
-docker run -d `
-  --name lab-mysql `
-  -e MYSQL_ROOT_PASSWORD=labroot `
-  -e MYSQL_DATABASE=labdb `
-  -e MYSQL_USER=labuser `
-  -e MYSQL_PASSWORD=labpass `
-  -p 3306:3306 `
-  -v mysql_data:/var/lib/mysql `
-  mysql:8
-```
-
-Verifique se o container está em execução:
-
-```powershell
-docker ps
-```
-
-**Validação via MySQL CLI (opcional):**
-
-```powershell
-docker exec -it lab-mysql bash
-mysql -u root -plabroot
-SHOW DATABASES;
+```groovy
+node {
+    stage('Preparation') {
+        catchError(buildResult: 'SUCCESS') {
+            sh 'docker stop samplerunning'
+            sh 'docker rm samplerunning'
+        }
+    }
+    stage('Build') {
+        build 'BuildAppJob'
+    }
+    stage('Results') {
+        build 'TestAppJob'
+    }
+}
 ```
 
 ---
 
-### 3. Build da Imagem PHP
+## 🧪 Script de Teste
 
-Acesse o diretório do projeto e construa a imagem Docker:
+O `TestAppJob` verifica automaticamente se a aplicação está respondendo com o conteúdo correto:
 
-```powershell
-cd C:\lab-php-mysql
-docker build -t lab-php-image .
+```bash
+if curl http://172.17.0.1:5050/ | grep "You are calling me from 172.17.0.1"; then
+  exit 0
+else
+  exit 1
+fi
 ```
 
-Liste as imagens disponíveis para confirmar o build:
-
-```powershell
-docker images
-```
-
-**Dockerfile utilizado:**
-
-```dockerfile
-FROM php:8.2-apache
-RUN docker-php-ext-install mysqli
-WORKDIR /var/www/html
-COPY . /var/www/html
-EXPOSE 80
-CMD ["apache2-foreground"]
-```
+- **exit 0** → Teste passou, build bem-sucedido ✅  
+- **exit 1** → Teste falhou, build marcado como erro ❌
 
 ---
 
-### 4. Execução do Container PHP
+## 👥 Integrantes do Grupo
 
-Execute o container PHP linkado ao container MySQL:
-
-```powershell
-docker run -d `
-  --name lab-php `
-  --link lab-mysql:mysql `
-  -e DB_HOST=lab-mysql `
-  -e DB_USER=labuser `
-  -e DB_PASSWORD=labpass `
-  -e DB_NAME=labdb `
-  -p 8080:80 `
-  lab-php-image
-```
-
-> **Container em execução:**
->
-> ![Container executando](prints/container-executando.png)
-
-Confirme os containers ativos:
-
-```powershell
-docker ps
-```
-
-> ![Docker PS](prints/container-rodando.jpeg)
+- Nickolas Corazza — RM562265
+- Dorivaldo Nascimento — RM565225
+- Gabriel Lamata — RM562093
+- Luiz Parpinelli — RM566493
 
 ---
 
-## 🌐 Acesso à Aplicação
+## 📎 Referências
 
-Com os containers em execução, acesse a aplicação no navegador:
-
-```
-http://127.0.0.1:8080
-```
-
-> **Página exibida no navegador:**
->
-> ![Aplicação rodando](prints/container-navegando.jpeg)
-
-A página lista as mensagens inseridas automaticamente no banco de dados MySQL pelo script PHP.
-
----
-
-## 🛑 Encerramento
-
-Para parar os containers:
-
-```powershell
-docker stop lab-php
-docker stop lab-mysql
-```
-
-Para remover os containers (opcional):
-
-```powershell
-docker rm lab-php
-docker rm lab-mysql
-```
-
-Para remover o volume (opcional — **apaga os dados**):
-
-```powershell
-docker volume rm mysql_data
-```
-
----
-
-## 🛠️ Tecnologias Utilizadas
-
-- **[Docker Desktop](https://www.docker.com/products/docker-desktop/)** — plataforma de containerização
-- **[PHP 8.2](https://www.php.net/)** com extensão `mysqli`
-- **[Apache HTTP Server](https://httpd.apache.org/)** — servidor web embutido na imagem `php:8.2-apache`
-- **[MySQL 8](https://dev.mysql.com/)** — banco de dados relacional
-- **[WSL 2](https://learn.microsoft.com/pt-br/windows/wsl/)** — subsistema Linux no Windows
-
----
-
-## 👤 Autor
-
-**Nickolas Corazza Alves**
-
----
-
-## 📝 Conclusão
-
-Este laboratório demonstrou na prática:
-
-- Como criar e gerenciar **volumes Docker** para persistência de dados
-- Como realizar **comunicação entre containers** com `--link`
-- Como **containerizar uma aplicação PHP** com servidor Apache
-- Como integrar **PHP e MySQL** em um ambiente Docker isolado
-- Como utilizar **variáveis de ambiente** para configuração segura de credenciais
-
----
-
-> ⚠️ **Nota:** O uso de `--link` é uma abordagem legada. Em projetos mais robustos, recomenda-se utilizar **Docker Compose** com redes definidas (`networks`) para comunicação entre containers.
+- [Jenkins Documentation](https://www.jenkins.io/doc/)
+- [Docker Hub - jenkins/jenkins](https://hub.docker.com/r/jenkins/jenkins)
+- [Flask Documentation](https://flask.palletsprojects.com/)
+- Cisco NetAcad - Lab: Build a CI/CD Pipeline Using Jenkins
