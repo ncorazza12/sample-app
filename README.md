@@ -68,7 +68,7 @@ bash ./sample-app.sh
 ## 📸 Evidências da Atividade
 
 ### 1. Repositório no GitHub
-![Repositório no GitHub](images/print_repositorio_git.jpeg)
+![Repositório no GitHub](images/print_repositorio_git.png)
 
 ---
 
